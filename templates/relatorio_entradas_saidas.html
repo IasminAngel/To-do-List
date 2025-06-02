@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Entradas e Saídas</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>Relatório de Entradas e Saídas</h1>
+        </div>
+
+        <div class="row">
+            <form action="/relatorio_entradas_saidas" method="get">
+                <div class="input-group">
+                    <label for="data_inicio">Data Início:</label>
+                    <input type="date" name="data_inicio" id="data_inicio" value="{{ data_inicio }}">
+                </div>
+                <div class="input-group">
+                    <label for="data_fim">Data Fim:</label>
+                    <input type="date" name="data_fim" id="data_fim" value="{{ data_fim }}">
+                </div>
+                <button type="submit" class="btn-option">Filtrar</button>
+            </form>
+        </div>
+
+        <div class="row">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Entrada</th>
+                        <th>Saída</th>
+                        <th>Placa</th>
+                        <th>Marca/Modelo</th>
+                        <th>Vaga</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in registros %}
+                    <tr>
+                        <td>{{ registro[0] }}</td>
+                        <td>{{ registro[1] if registro[1] else 'Ainda estacionado' }}</td>
+                        <td>{{ registro[2] }}</td>
+                        <td>{{ registro[3] }} {{ registro[4] }}</td>
+                        <td>{{ registro[5] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row">
+            <a href="/relatorios" class="btn-option">Voltar</a>
+        </div>
+    </div>
+</body>
+
+</html>

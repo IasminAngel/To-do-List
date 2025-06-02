@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <title>Sistema Estacionamento</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>Sistema Estacionamento</h1>
+    </div>
+    <form action="/registrar_carro" method="post">
+      <div class="row">
+        <h4>Cadastrar Carros</h4>
+        <div class="input-group input-group-icon">
+          <input type="text" id="placa" name="placa" placeholder="Placa" required />
+          <div class="input-icon"><i class="fa-solid fa-car-rear"></i></div>
+        </div>
+        <div class="input-group input-group-icon">
+          <input type="text" id="marca" name="marca" placeholder="Marca" required />
+          <div class="input-icon">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+        </div>
+        <div class="input-group input-group-icon">
+          <input type="text" id="modelo" name="modelo" placeholder="Modelo" required />
+          <div class="input-icon"><i class="fa-solid fa-tags"></i></div>
+        </div>
+        <div class="input-group input-group-icon">
+          <input type="number" id="ano" name="ano" placeholder="Ano" min="1900" max="2023" required />
+          <div class="input-icon"><i class="fa-solid fa-calendar"></i></div>
+        </div>
+        <button type="submit" class="btn-option">Enviar</button>
+      </div>
+
+      <div class="row">
+        <h4>Informações gerais:</h4>
+        <div class="button-group">
+          <button id="exibir-carros" class="btn-option">
+            <span><i class="fa-solid fa-car"></i> Exibir carros registrados</span>
+          </button>
+          <button onclick="window.location.href='/gerenciar_vagas'" class="btn-option">
+            <span><i class="fa-solid fa-parking"></i>Gerenciar Vagas</span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <div id="tabelaCarros" style="display: none">
+      <h4>Carros Registrados</h4>
+      <h5>
+        Para "Editar" apenas clique em cima da coluna desejada e aperte em
+        salvar para manter as alterações, para "Remover", clique no botão e
+        escolha qual deverá excluir:
+      </h5>
+      <table>
+        <thead>
+          <tr>
+            <th>Placa</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Ano</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for carro in carros %}
+          <tr>
+            <form method="post" action="/atualizar_carro" class="form-edicao">
+              <input type="hidden" name="id" value="{{ carro[0] }}" />
+              <td>
+                <input type="text" name="placa" value="{{ carro[1] }}" required />
+              </td>
+              <td>
+                <input type="text" name="marca" value="{{ carro[2] }}" required />
+              </td>
+              <td>
+                <input type="text" name="modelo" value="{{ carro[3] }}" required />
+              </td>
+              <td>
+                <input type="number" name="ano" value="{{ carro[4] }}" min="1900" max="{{ datetime.now().year }}"
+                  required />
+              </td>
+              <td class="action-buttons">
+                <button type="submit" class="btn-small btn-save">
+                  <i class="fa fa-save"></i>
+                </button>
+
+                <button type="button" class="btn-small btn-remove btn-remover" data-id="{{ carro[0] }}">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </td>
+            </form>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div id="formEdicao" style="display: none">
+      <h4>Editar Carro</h4>
+      <form id="formAlterar">
+        <input type="hidden" id="idCarro" name="id" />
+        <label for="placa">Placa:</label>
+        <input type="text" id="placa" name="placa" required />
+        <br />
+        <label for="marca">Marca:</label>
+        <input type="text" id="marca" name="marca" required />
+        <br />
+        <label for="modelo">Modelo:</label>
+        <input type="text" id="modelo" name="modelo" required />
+        <br />
+        <label for="ano">Ano:</label>
+        <input type="text" id="ano" name="ano" required />
+        <br />
+        <button type="submit">Salvar Alterações</button>
+        <button type="button" id="cancelarEdicao">Cancelar</button>
+      </form>
+    </div>
+  </div>
+</body>
+<script src="/static/js/script.js"></script>
+
+</html>

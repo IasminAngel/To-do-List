@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Ocupação</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>Relatório de Ocupação</h1>
+        </div>
+
+        <div class="row">
+            <h4>Status das Vagas</h4>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Total de Vagas</h3>
+                    <p>{{ total_vagas }}</p>
+                </div>
+                <div class="stat-card available">
+                    <h3>Disponíveis</h3>
+                    <p>{{ disponiveis }}</p>
+                </div>
+                <div class="stat-card occupied">
+                    <h3>Ocupadas</h3>
+                    <p>{{ ocupadas }}</p>
+                </div>
+                <div class="stat-card reserved">
+                    <h3>Reservadas</h3>
+                    <p>{{ reservadas }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <h4>Métricas</h4>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Tempo Médio de Permanência</h3>
+                    <p>{{ tempo_medio_horas }} horas</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <a href="/relatorios" class="btn-option">Voltar</a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerenciar Vagas</title>
+  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+</head>
+
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>Gerenciamento de Vagas</h1>
+    </div>
+
+    <!--<div class="row">
+      <h4>Criar Novas Vagas</h4>
+      <form action="/criar_vagas" method="post">
+        <div class="input-group">
+          <input type="number" name="quantidade" min="1" placeholder="Quantidade de vagas" required />
+        </div>
+        <button type="submit" class="btn-option">Criar Vagas</button>
+      </form>
+    </div>-->
+
+    <div class="row">
+      <h4>Lista de Vagas</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Número</th>
+            <th>Status</th>
+            <th>Placa</th>
+            <th>Marca/Modelo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vaga in vagas %}
+          <tr>
+            <td>{{ vaga[1] }}</td>
+            <td>{{ vaga[2] }}</td>
+
+            <td>
+              {% if vaga[3] %}
+              {% for carro in todos_carros if carro[0] == vaga[3] %}
+              {{ carro[1] }}
+              {% endfor %}
+              {% else %}
+              -
+              {% endif %}
+            </td>
+            <td>
+              {% if vaga[3] %}
+              {% for carro in todos_carros if carro[0] == vaga[3] %}
+              {{ carro[2] }} {{ carro[3] }}
+              {% endfor %}
+              {% else %}
+              -
+              {% endif %}
+            </td>
+
+            <td>
+              {% if vaga[2] == 'ocupada' %}
+              <form action="/registrar_saida" method="post">
+                <input type="hidden" name="placa"
+                  value="{% for carro in todos_carros if carro[0] == vaga[3] %}{{ carro[1] }}{% endfor %}">
+                <button type="submit" class="btn-small btn-remove">
+                  <i class="fa fa-sign-out-alt"></i> Registrar Saída
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row">
+      <h4>Reservar Vaga</h4>
+      <form action="/reservar_vaga" method="post">
+        <div class="input-group">
+          <label for="carro_id">Carro:</label>
+          <select name="carro_id" id="carro_id" required>
+            <option value="">Selecione um carro</option>
+            {% for carro in carros_disponiveis %}
+            <option value="{{ carro[0] }}">
+              {{ carro[1] }} - {{ carro[2] }} {{ carro[3] }} ({{ carro[4] }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="vaga_id">Vaga:</label>
+          <select name="vaga_id" id="vaga_id" required>
+            <option value="">Selecione uma vaga</option>
+            {% for vaga in vagas if vaga[2] == 'disponível' %}
+            <option value="{{ vaga[0] }}">Vaga {{ vaga[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn-option">Reservar Vaga</button>
+      </form>
+    </div>
+    <div class="row">
+      <h4>Registrar Entrada</h4>
+      <form action="/registrar_entrada" method="post">
+        <div class="input-group">
+          <input type="text" name="placa" placeholder="Placa do carro" required />
+        </div>
+        <button type="submit" class="btn-option">Registrar Entrada</button>
+      </form>
+    </div>
+
+    <div class="row">
+      <a href="/" class="btn-option">Voltar</a>
+    </div>
+  </div>
+</body>
+
+</html>
