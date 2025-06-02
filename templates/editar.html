@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Editar Tarefa</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+      color: #555;
+    }
+    input[type="text"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    button {
+      background-color: #0056B3;
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #004494;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Editar Tarefa</h2>
+
+  <form action="{{ url_for('atualizar_tarefa') }}" method="POST">
+    <input type="hidden" name="id" value="{{ tarefa[0] }}" />
+
+    <label for="descricao">Descrição:</label>
+    <input
+      type="text"
+      id="descricao"
+      name="descricao"
+      value="{{ tarefa[1] }}"
+      required
+    />
+
+    <label for="setor">Setor:</label>
+    <input
+      type="text"
+      id="setor"
+      name="setor"
+      value="{{ tarefa[2] }}"
+      required
+    />
+
+    <label for="prioridade">Prioridade:</label>
+    <select id="prioridade" name="prioridade" required>
+      <option value="Baixa" {% if tarefa[3] == 'Baixa' %}selected{% endif %}>Baixa</option>
+      <option value="Média" {% if tarefa[3] == 'Média' %}selected{% endif %}>Média</option>
+      <option value="Alta" {% if tarefa[3] == 'Alta' %}selected{% endif %}>Alta</option>
+    </select>
+
+    <label for="data">Data:</label>
+    <input
+      type="date"
+      id="data"
+      name="data"
+      value="{{ tarefa[4] }}"
+      required
+    />
+
+    <label for="status">Status:</label>
+    <select id="status" name="status" required>
+      <option value="A fazer" {% if tarefa[5] == 'A fazer' %}selected{% endif %}>A fazer</option>
+      <option value="Fazendo" {% if tarefa[5] == 'Fazendo' %}selected{% endif %}>Fazendo</option>
+      <option value="Pronto" {% if tarefa[5] == 'Pronto' %}selected{% endif %}>Pronto</option>
+    </select>
+
+    <button type="submit">Salvar Alterações</button>
+  </form>
+
+</body>
+</html>

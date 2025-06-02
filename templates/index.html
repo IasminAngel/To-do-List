@@ -1,128 +1,232 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lista de Tarefas</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #ffffff;
+        color: #000000;
+      }
+      nav {
+        background-color: #0056b3;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      nav a {
+        color: #ffffff;
+        margin: 0 15px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      nav a:hover {
+        text-decoration: underline;
+      }
+      h1,
+      h2 {
+        color: #000000;
+        text-align: center;
+        margin-bottom: 25px;
+      }
+      form {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 0 12px rgba(0, 86, 179, 0.3);
+        margin-bottom: 40px;
+      }
+      input,
+      select {
+        display: block;
+        margin-bottom: 15px;
+        padding: 10px;
+        width: 100%;
+        font-size: 16px;
+        border: 2px solid #0056b3;
+        border-radius: 5px;
+        color: #000000;
+      }
+      input:focus,
+      select:focus {
+        border-color: #000000;
+        outline: none;
+      }
+      button {
+        background-color: #0056b3;
+        color: #ffffff;
+        padding: 12px 0;
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #003d80;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #ffffff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+        color: #000000;
+      }
+      th {
+        background-color: #0056b3;
+        color: #ffffff;
+        font-weight: bold;
+      }
+      tr:hover {
+        background-color: #f0f7ff;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+      }
+      .actions a,
+      .actions button {
+        background-color: #0056b3;
+        color: #ffffff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+      }
+      .actions a:hover,
+      .actions button:hover {
+        background-color: #003d80;
+      }
+      .success {
+        color: green;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .error {
+        color: red;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="{{ url_for('index') }}">Lista de Tarefas</a>
+      <a href="{{ url_for('cadastro_usuario') }}">Cadastrar Usuário</a>
+    </nav>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/static/css/styles.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-  <title>Sistema Estacionamento</title>
-</head>
+    <h1>Registrar Nova Tarefa</h1>
 
-<body>
-  <div class="container">
-    <div class="title">
-      <h1>Sistema Estacionamento</h1>
-    </div>
-    <form action="/registrar_carro" method="post">
-      <div class="row">
-        <h4>Cadastrar Carros</h4>
-        <div class="input-group input-group-icon">
-          <input type="text" id="placa" name="placa" placeholder="Placa" required />
-          <div class="input-icon"><i class="fa-solid fa-car-rear"></i></div>
-        </div>
-        <div class="input-group input-group-icon">
-          <input type="text" id="marca" name="marca" placeholder="Marca" required />
-          <div class="input-icon">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </div>
-        </div>
-        <div class="input-group input-group-icon">
-          <input type="text" id="modelo" name="modelo" placeholder="Modelo" required />
-          <div class="input-icon"><i class="fa-solid fa-tags"></i></div>
-        </div>
-        <div class="input-group input-group-icon">
-          <input type="number" id="ano" name="ano" placeholder="Ano" min="1900" max="2023" required />
-          <div class="input-icon"><i class="fa-solid fa-calendar"></i></div>
-        </div>
-        <button type="submit" class="btn-option">Enviar</button>
-      </div>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <p class="{{ category }}">{{ message }}</p>
+    {% endfor %} {% endif %} {% endwith %}
 
-      <div class="row">
-        <h4>Informações gerais:</h4>
-        <div class="button-group">
-          <button id="exibir-carros" class="btn-option">
-            <span><i class="fa-solid fa-car"></i> Exibir carros registrados</span>
-          </button>
-          <button onclick="window.location.href='/gerenciar_vagas'" class="btn-option">
-            <span><i class="fa-solid fa-parking"></i>Gerenciar Vagas</span>
-          </button>
-        </div>
-      </div>
+    <form action="{{ url_for('adicionar_tarefa') }}" method="POST">
+      <input
+        type="text"
+        name="descricao"
+        placeholder="Descrição da Tarefa"
+        required
+      />
+      <input type="text" name="setor" placeholder="Setor" required />
+      <select name="prioridade" required>
+        <option value="">Selecione a Prioridade</option>
+        <option value="Baixa">Baixa</option>
+        <option value="Média">Média</option>
+        <option value="Alta">Alta</option>
+      </select>
+      <input type="date" name="data" required />
+      <select name="status" required>
+        <option value="A fazer" selected>Selecione o Status</option>
+        <option value="A fazer">A fazer</option>
+        <option value="Fazendo">Fazendo</option>
+        <option value="Pronto">Pronto</option>
+      </select>
+      <select name="empresa_id" required>
+        <option value="">Selecione o Usuário</option>
+        {% for usuario in usuarios %}
+        <option value="{{ usuario[0] }}">
+          {{ usuario[1] }} - {{ usuario[2] }}
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit">Registrar Tarefa</button>
     </form>
 
-    <div id="tabelaCarros" style="display: none">
-      <h4>Carros Registrados</h4>
-      <h5>
-        Para "Editar" apenas clique em cima da coluna desejada e aperte em
-        salvar para manter as alterações, para "Remover", clique no botão e
-        escolha qual deverá excluir:
-      </h5>
-      <table>
-        <thead>
-          <tr>
-            <th>Placa</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Ano</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for carro in carros %}
-          <tr>
-            <form method="post" action="/atualizar_carro" class="form-edicao">
-              <input type="hidden" name="id" value="{{ carro[0] }}" />
-              <td>
-                <input type="text" name="placa" value="{{ carro[1] }}" required />
-              </td>
-              <td>
-                <input type="text" name="marca" value="{{ carro[2] }}" required />
-              </td>
-              <td>
-                <input type="text" name="modelo" value="{{ carro[3] }}" required />
-              </td>
-              <td>
-                <input type="number" name="ano" value="{{ carro[4] }}" min="1900" max="{{ datetime.now().year }}"
-                  required />
-              </td>
-              <td class="action-buttons">
-                <button type="submit" class="btn-small btn-save">
-                  <i class="fa fa-save"></i>
-                </button>
+    <h2>Lista de Tarefas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Descrição</th>
+          <th>Setor</th>
+          <th>Prioridade</th>
+          <th>Data de Cadastro</th>
+          <th>Status</th>
+          <th>Usuário</th>
+          <th>Email</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tarefa in tarefas %}
+        <tr>
+          <td>{{ tarefa[0] }}</td>
+          <td>{{ tarefa[1] }}</td>
+          <td>{{ tarefa[2] }}</td>
+          <td>{{ tarefa[3] }}</td>
+          <td>{{ tarefa[4] }}</td>
+          <td>{{ tarefa[5] }}</td>
+          <td>{{ tarefa[6] }}</td>
+          <td>{{ tarefa[7] }}</td>
+          <td>
+            <div class="actions">
+              <a href="{{ url_for('editar_tarefa', id=tarefa[0]) }}">Editar</a>
+              <button onclick="deletarTarefa({{ tarefa[0] }})">Excluir</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-                <button type="button" class="btn-small btn-remove btn-remover" data-id="{{ carro[0] }}">
-                  <i class="fa fa-trash"></i>
-                </button>
-              </td>
-            </form>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <div id="formEdicao" style="display: none">
-      <h4>Editar Carro</h4>
-      <form id="formAlterar">
-        <input type="hidden" id="idCarro" name="id" />
-        <label for="placa">Placa:</label>
-        <input type="text" id="placa" name="placa" required />
-        <br />
-        <label for="marca">Marca:</label>
-        <input type="text" id="marca" name="marca" required />
-        <br />
-        <label for="modelo">Modelo:</label>
-        <input type="text" id="modelo" name="modelo" required />
-        <br />
-        <label for="ano">Ano:</label>
-        <input type="text" id="ano" name="ano" required />
-        <br />
-        <button type="submit">Salvar Alterações</button>
-        <button type="button" id="cancelarEdicao">Cancelar</button>
-      </form>
-    </div>
-  </div>
-</body>
-<script src="/static/js/script.js"></script>
-
+    <script>
+      function deletarTarefa(id) {
+        if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+          fetch("/deletar_tarefa", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              alert(data.mensagem);
+              window.location.reload();
+            })
+            .catch((error) => console.error("Erro:", error));
+        }
+      }
+    </script>
+  </body>
 </html>

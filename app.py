@@ -12,41 +12,50 @@ def conectar_db():
 def criar_tabela():
     conectar = conectar_db()
     cursor = conectar.cursor()
-    cursor.execute(
-        '''
-        CREATE TABLE IF NOT EXISTS empresa (
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS empresa (
         idUsuario INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
         email TEXT NOT NULL
-        );
-        '''
     )
-    cursor.execute(
-        '''
-        CREATE TABLE IF NOT EXISTS tarefas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT ,
+    ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS tarefas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         descricao TEXT NOT NULL,
-        empresa_idUsuario INTEGER NOT NULL,
-        nome_setor TEXT NOT NULL,
+        setor TEXT,
         prioridade TEXT NOT NULL,
-        data_cadastro DATE NOT NULL,
+        data TEXT NOT NULL,
         status TEXT NOT NULL,
-        FOREIGN KEY (empresa_idUsuario) REFERENCES empresa (idUsuario)
-        );
-        '''
+        empresa_idUsuario INTEGER NOT NULL,
+        FOREIGN KEY (empresa_idUsuario) REFERENCES empresa(idUsuario)
     )
+    ''')
 
     conectar.commit()
     conectar.close()
 
 @app.route('/')
 def index():
-    conectar = conectar_db()
-    cursor = conectar.cursor()
-    cursor.execute("SELECT * FROM tarefas")
+    conn = conectar_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT tarefas.id, tarefas.descricao, tarefas.setor, tarefas.prioridade, tarefas.data, tarefas.status,
+               empresa.nome, empresa.email
+        FROM tarefas
+        JOIN empresa ON tarefas.empresa_idUsuario = empresa.idUsuario
+    """)
     tarefas = cursor.fetchall()
-    conectar.close()
-    return render_template('index.html', tarefas=tarefas, datetime=datetime)
+
+    cursor.execute("SELECT idUsuario, nome, email FROM empresa")
+    usuarios = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('index.html', tarefas=tarefas, usuarios=usuarios)
 
 @app.route('/registrar_tarefa', methods=['POST'])
 def adicionar_tarefa():
@@ -55,420 +64,140 @@ def adicionar_tarefa():
     prioridade = request.form.get('prioridade')
     data = request.form.get('data')
     status = request.form.get('status')
+    empresa_id = request.form.get('empresa_id')
 
-    if descricao and setor and prioridade and data and status:
+    if descricao and setor and prioridade and data and status and empresa_id:
         try:
             conectar = conectar_db()
             cursor = conectar.cursor()
             cursor.execute("""
-                INSERT INTO tarefas (descricao, nome_setor, prioridade, data_cadastro, status, empresa_idUsuario)
+                INSERT INTO tarefas (descricao, setor, prioridade, data, status, empresa_idUsuario)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (descricao, setor, prioridade, data, status, 1))  
+            """, (descricao, setor, prioridade, data, status, empresa_id))
             conectar.commit()
             conectar.close()
-
-            flash('Tarefa cadastrada com sucesso!', 'success')
+            flash('Tarefa adicionada com sucesso!', 'success')
         except Exception as e:
-            flash(f'Erro ao cadastrar tarefa: {str(e)}', 'error')
+            flash(f'Erro ao cadastrar tarefa: {e}', 'error')
     else:
-        flash('Todos os campos devem ser preenchidos.', 'error')
+        flash('Por favor, preencha todos os campos.', 'error')
 
-    return redirect(url_for('index'))  # Redireciona para a tela inicial
-# @app.route('/exibir_tarefas', methods=['GET'])
-# def exibir_carro():
-#     conectar = conectar_db()
-#     cursor = conectar.cursor()
-
-#     cursor.execute("SELECT * FROM tarefas")
-#     carros = cursor.fetchall()  
-
-#     conectar.close()
-
-#     return render_template('index.html', carros=carros)
-
-# def deletar_carro(id_carro):
-#     try:
-#         conectar = conectar_db()
-#         cursor = conectar.cursor()
-
-#         cursor.execute("DELETE FROM carro WHERE id = ?", (id_carro,))
-#         conectar.commit()  
-
-#         conectar.close()
-
-#         return "Carro excluído com sucesso!"
-
-#     except Exception as e:
-#         return f"Erro ao excluir carro: {e}"
+    return redirect(url_for('index'))
     
-# def alterar_carro(id_carro, placa, marca, modelo, ano):
+def alterar_tarefa(id_tarefa, descricao, setor, prioridade, data, status):
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
 
-#     try:
-#         conectar = conectar_db()
-#         cursor = conectar.cursor()
+        cursor.execute(
+            "UPDATE tarefas SET descricao = ?, nome = ?, prioridade = ?, data = ?, status = ? WHERE id = ?",
+            (descricao, setor, prioridade, data, status, id_tarefa)
+        )
 
-#         cursor.execute(
-#             "UPDATE carro SET placa = ?, marca = ?, modelo = ?, ano = ? WHERE id = ?",
-#             (placa, marca, modelo, ano, id_carro)
-#         )
+        conectar.commit()
+        conectar.close()
 
-#         conectar.commit()  
+        return "Tarefa atualizada com sucesso!"
 
-#         conectar.close()
+    except Exception as e:
+        return f"Erro ao atualizar a tarefa: {e}"
 
-#         return "Carro alterado com sucesso!"
+@app.route('/deletar_tarefa', methods=['DELETE'])
+def excluir_tarefa():
+    dados = request.get_json()
+    id_tarefa = dados.get('id')
 
-#     except Exception as e:
-#         return f"Erro ao alterar o carro: {e}"
+    if not id_tarefa:
+        return jsonify({'mensagem': 'Erro: ID da tarefa não fornecido'}), 400
 
-
-# @app.route('/deletar_carro', methods=['DELETE'])
-# def excluir():
-#     dados = request.get_json()
-#     id_carro = dados.get('id')  
-
-#     if not id_carro:
-#         return jsonify({'mensagem': 'Erro: ID do carro não fornecido'}), 400
-
-#     mensagem = deletar_carro(id_carro)
-#     return jsonify({'mensagem': mensagem})
-
-# @app.route('/atualizar_carro', methods=['POST'])
-# def atualizar_carro():
-#     try:
-#         id_carro = request.form.get('id')
-#         placa = request.form.get('placa')
-#         marca = request.form.get('marca')
-#         modelo = request.form.get('modelo')
-#         ano = request.form.get('ano')
-
-#         if not all([id_carro, placa, marca, modelo, ano]):
-#             flash('Todos os campos são obrigatórios!', 'error')
-#             return redirect(url_for('index'))
-
-#         try:
-#             ano = int(ano)
-#             if ano < 1900 or ano > datetime.now().year:
-#                 flash('Ano inválido!', 'error')
-#                 return redirect(url_for('index'))
-#         except ValueError:
-#             flash('Ano deve ser um número válido!', 'error')
-#             return redirect(url_for('index'))
-
-#         conn = conectar_db()
-#         cursor = conn.cursor()
-        
-#         cursor.execute("SELECT id FROM carro WHERE placa = ? AND id != ?", (placa, id_carro))
-#         if cursor.fetchone():
-#             flash('Esta placa já está cadastrada em outro veículo!', 'error')
-#             return redirect(url_for('index'))
-
-#         cursor.execute(
-#             "UPDATE carro SET placa=?, marca=?, modelo=?, ano=? WHERE id=?",
-#             (placa, marca, modelo, ano, id_carro)
-#         )
-        
-#         conn.commit()
-#         flash('Carro atualizado com sucesso!', 'success')
-#         return redirect(url_for('index'))
-
-#     except Exception as e:
-#         print(f"Erro durante atualização: {str(e)}")
-#         flash('Erro ao atualizar carro!', 'error')
-#         return redirect(url_for('index'))
-#     finally:
-#         if 'conn' in locals():
-#             conn.close()
-
-
-# @app.route('/gerenciar_vagas')
-# def gerenciar_vagas():
-#     conectar = conectar_db()
-#     cursor = conectar.cursor()
+    try:
+        conectar = conectar_db()
+        cursor = conectar.cursor()
+        cursor.execute("DELETE FROM tarefas WHERE id = ?", (id_tarefa,))
+        conectar.commit()
+        conectar.close()
+        return jsonify({'mensagem': 'Tarefa deletada com sucesso!'})
+    except Exception as e:
+        return jsonify({'mensagem': f'Erro ao deletar tarefa: {e}'}), 500
     
-#     cursor.execute("SELECT * FROM vaga")
-#     vagas = cursor.fetchall()
-    
-#     cursor.execute("SELECT * FROM carro WHERE vaga_id IS NULL")
-#     carros_disponiveis = cursor.fetchall()
-#     cursor.execute("SELECT * FROM carro ")
-#     todos_carros = cursor.fetchall()
-    
-#     conectar.close()
-    
-#     return render_template('gerenciar_vagas.html', 
-#                          vagas=vagas, 
-#                          todos_carros=todos_carros,
-#                          carros_disponiveis= carros_disponiveis, 
-#                          datetime=datetime)
+
+@app.route('/cadastro_usuario', methods=['GET'])
+def cadastro_usuario():
+    return render_template('cadastro_usuario.html')
+
+@app.route('/registrar_usuario', methods=['POST'])
+def registrar_usuario():
+    nome = request.form.get('nome')
+    email = request.form.get('email')
+
+    if nome and email:
+        try:
+            conn = conectar_db()
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO empresa (nome, email) VALUES (?, ?)", (nome, email))
+            conn.commit()
+            conn.close()
+            flash('Usuário cadastrado com sucesso!', 'success')
+        except Exception as e:
+            flash(f'Erro ao cadastrar usuário: {e}', 'error')
+    else:
+        flash('Por favor, preencha todos os campos.', 'error')
+
+    return redirect(url_for('index'))
 
 
-# @app.route('/criar_vagas', methods=['POST'])
-# def criar_vagas():
-#     quantidade = request.form.get('quantidade', type=int)
-    
-#     if quantidade and quantidade > 0:
-#         try:
-#             conectar = conectar_db()
-#             cursor = conectar.cursor()
-            
-#             cursor.execute("SELECT MAX(numero) FROM vaga")
-#             max_numero = cursor.fetchone()[0] or 0
-            
-#             for i in range(1, quantidade + 1):
-#                 cursor.execute(
-#                     "INSERT INTO vaga (numero, status) VALUES (?, ?)",
-#                     (max_numero + i, 'disponível')
-#                 )
-            
-#             conectar.commit()
-#             flash(f'{quantidade} vagas criadas com sucesso!', 'success')
-#         except Exception as e:
-#             flash(f'Erro ao criar vagas: {str(e)}', 'error')
-#         finally:
-#             conectar.close()
-#     else:
-#         flash('Quantidade inválida!', 'error')
-    
-#     return redirect(url_for('gerenciar_vagas'))
 
-# @app.route('/reservar_vaga', methods=['POST'])
-# def reservar_vaga():
-#     vaga_id = request.form.get('vaga_id')
-#     carro_id = request.form.get('carro_id')
-    
-#     if vaga_id and carro_id:
-#         try:
-#             conectar = conectar_db()
-#             cursor = conectar.cursor()
-            
-#             cursor.execute("SELECT status FROM vaga WHERE id = ?", (vaga_id,))
-#             status = cursor.fetchone()[0]
-            
-#             if status != 'disponível':
-#                 flash('Vaga não está disponível para reserva!', 'error')
-#                 return redirect(url_for('gerenciar_vagas'))
-            
-#             cursor.execute(
-#                 "UPDATE vaga SET status = 'reservada', carro_id = ? WHERE id = ?",
-#                 (carro_id, vaga_id)
-#             )
-            
-#             cursor.execute(
-#                 "UPDATE carro SET vaga_id = ? WHERE id = ?",
-#                 (vaga_id, carro_id)
-#             )
-            
-#             conectar.commit()
-#             flash('Vaga reservada com sucesso!', 'success')
-#         except Exception as e:
-#             flash(f'Erro ao reservar vaga: {str(e)}', 'error')
-#         finally:
-#             conectar.close()
-#     else:
-#         flash('Dados incompletos para reserva!', 'error')
-    
-#     return redirect(url_for('gerenciar_vagas'))
 
-# @app.route('/registrar_entrada', methods=['POST'])
-# def registrar_entrada():
-#     placa = request.form.get('placa')
-    
-#     if placa:
-#         try:
-#             conectar = conectar_db()
-#             cursor = conectar.cursor()
-            
-#             cursor.execute("SELECT id, vaga_id FROM carro WHERE placa = ?", (placa,))
-#             carro = cursor.fetchone()
-            
-#             if not carro:
-#                 flash('Carro não encontrado!', 'error')
-#                 return redirect(url_for('gerenciar_vagas'))
-            
-#             carro_id, vaga_id = carro
-            
-#             if vaga_id:
-#                 cursor.execute("SELECT status FROM vaga WHERE id = ?", (vaga_id,))
-#                 status = cursor.fetchone()[0]
-                
-#                 if status == 'ocupada':
-#                     flash('Carro já está estacionado!', 'error')
-#                     return redirect(url_for('gerenciar_vagas'))
-            
-#                 cursor.execute(
-#                     "UPDATE vaga SET status = 'ocupada' WHERE id = ?",
-#                     (vaga_id,)
-#                 )
-#             else:
-#                 cursor.execute(
-#                     "SELECT id FROM vaga WHERE status = 'disponível' LIMIT 1"
-#                 )
-#                 vaga = cursor.fetchone()
-                
-#                 if not vaga:
-#                     flash('Não há vagas disponíveis!', 'error')
-#                     return redirect(url_for('gerenciar_vagas'))
-                
-#                 vaga_id = vaga[0]
-                
-#                 cursor.execute(
-#                     "UPDATE vaga SET status = 'ocupada', carro_id = ? WHERE id = ?",
-#                     (carro_id, vaga_id)
-#                 )
-#                 cursor.execute(
-#                     "UPDATE carro SET vaga_id = ? WHERE id = ?",
-#                     (vaga_id, carro_id)
-#                 )
-            
-#             cursor.execute(
-#                 "INSERT INTO historico (carro_id, vaga_id, entrada) VALUES (?, ?, ?)",
-#                 (carro_id, vaga_id, datetime.now())
-#             )
-            
-#             conectar.commit()
-#             flash('Entrada registrada com sucesso!', 'success')
-#         except Exception as e:
-#             flash(f'Erro ao registrar entrada: {str(e)}', 'error')
-#         finally:
-#             conectar.close()
-#     else:
-#         flash('Placa não informada!', 'error')
-    
-#     return redirect(url_for('gerenciar_vagas'))
+@app.route('/editar_tarefa/<int:id>')
+def editar_tarefa(id):
+    conn = conectar_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tarefas WHERE id = ?", (id,))
+    tarefa = cursor.fetchone()
+    conn.close()
+    return render_template("editar.html", tarefa=tarefa)
 
-# @app.route('/registrar_saida', methods=['POST'])
-# def registrar_saida():
-#     placa = request.form.get('placa')
-    
-#     if not placa:
-#         flash('Placa não informada!', 'error')
-#         return redirect(url_for('gerenciar_vagas'))
+@app.route('/atualizar_tarefa', methods=['POST'])
+def atualizar_tarefa():
+    try:
+        id_tarefa = request.form.get('id')
+        descricao = request.form.get('descricao')
+        setor = request.form.get('setor')
+        prioridade = request.form.get('prioridade')
+        data = request.form.get('data')
+        status = request.form.get('status')
 
-#     try:
-#         conn = conectar_db()
-#         cursor = conn.cursor()
-        
-#         cursor.execute("""
-#             SELECT carro.id, carro.vaga_id 
-#             FROM carro 
-#             WHERE placa = ? AND vaga_id IS NOT NULL
-#         """, (placa,))
-#         carro = cursor.fetchone()
-        
-#         if not carro:
-#             flash('Carro não encontrado ou não está estacionado!', 'error')
-#             return redirect(url_for('gerenciar_vagas'))
-        
-#         carro_id, vaga_id = carro
-        
-#         cursor.execute("""
-#             UPDATE vaga 
-#             SET status = 'disponível', carro_id = NULL 
-#             WHERE id = ? AND carro_id = ?
-#         """, (vaga_id, carro_id))
-        
-#         cursor.execute("""
-#             UPDATE carro 
-#             SET vaga_id = NULL 
-#             WHERE id = ?
-#         """, (carro_id,))
-        
-#         cursor.execute("""
-#             UPDATE historico 
-#             SET saida = datetime('now') 
-#             WHERE carro_id = ? AND vaga_id = ? AND saida IS NULL
-#         """, (carro_id, vaga_id))
-        
-#         conn.commit()
-#         flash('Saída registrada com sucesso!', 'success')
-        
-#     except Exception as e:
-#         conn.rollback()
-#         flash(f'Erro ao registrar saída: {str(e)}', 'error')
-#     finally:
-#         conn.close()
-    
-#     return redirect(url_for('gerenciar_vagas'))
+        if not all([id_tarefa, descricao, setor, prioridade, data, status]):
+            flash('Todos os campos são obrigatórios!', 'error')
+            return redirect(url_for('index'))
 
-# @app.route('/relatorios')
-# def relatorios():
-#     return render_template('relatorios.html')
+        conectar = conectar_db()
+        cursor = conectar.cursor()
 
-# @app.route('/relatorio_entradas_saidas')
-# def relatorio_entradas_saidas():
-#     data_inicio = request.args.get('data_inicio')
-#     data_fim = request.args.get('data_fim')
-    
-#     try:
-#         conectar = conectar_db()
-#         cursor = conectar.cursor()
+        cursor.execute(
+            """
+            UPDATE tarefas
+            SET descricao = ?, setor = ?, prioridade = ?, data = ?, status = ?
+            WHERE id = ?
+            """,
+            (descricao, setor, prioridade, data, status, id_tarefa)
+        )
         
-#         query = """
-#             SELECT h.entrada, h.saida, c.placa, c.marca, c.modelo, v.numero
-#             FROM historico h
-#             JOIN carro c ON h.carro_id = c.id
-#             JOIN vaga v ON h.vaga_id = v.id
-#         """
-        
-#         params = []
-        
-#         if data_inicio and data_fim:
-#             query += " WHERE h.entrada BETWEEN ? AND ?"
-#             params.extend([data_inicio, data_fim])
-        
-#         query += " ORDER BY h.entrada DESC"
-        
-#         cursor.execute(query, params)
-#         registros = cursor.fetchall()
-        
-#         return render_template('relatorio_entradas_saidas.html', 
-#                             registros=registros,
-#                             data_inicio=data_inicio,
-#                             data_fim=data_fim)
-    
-#     except Exception as e:
-#         flash(f'Erro ao gerar relatório: {str(e)}', 'error')
-#         return redirect(url_for('relatorios'))
-#     finally:
-#         conectar.close()
+        conectar.commit()
+        conectar.close()
 
-# @app.route('/relatorio_ocupacao')
-# def relatorio_ocupacao():
-#     try:
-#         conectar = conectar_db()
-#         cursor = conectar.cursor()
-        
-#         cursor.execute("SELECT COUNT(*) FROM vaga")
-#         total_vagas = cursor.fetchone()[0]
-        
-#         cursor.execute("SELECT COUNT(*) FROM vaga WHERE status = 'ocupada'")
-#         ocupadas = cursor.fetchone()[0]
-       
-#         cursor.execute("SELECT COUNT(*) FROM vaga WHERE status = 'reservada'")
-#         reservadas = cursor.fetchone()[0]
-        
-#         disponiveis = total_vagas - ocupadas - reservadas
-        
-#         cursor.execute("""
-#             SELECT AVG(JULIANDAY(saida) - JULIANDAY(entrada)) * 24 
-#             FROM historico 
-#             WHERE saida IS NOT NULL
-#         """)
-#         tempo_medio_horas = cursor.fetchone()[0] or 0
-        
-#         return render_template('relatorio_ocupacao.html',
-#                             total_vagas=total_vagas,
-#                             ocupadas=ocupadas,
-#                             reservadas=reservadas,
-#                             disponiveis=disponiveis,
-#                             tempo_medio_horas=round(tempo_medio_horas, 2))
+        flash('Tarefa atualizada com sucesso!', 'success')
+        return redirect(url_for('index'))
     
-#     except Exception as e:
-#         flash(f'Erro ao gerar relatório: {str(e)}', 'error')
-#         return redirect(url_for('relatorios'))
-#     finally:
-#         conectar.close()
+    except Exception as e:
+        flash(f'Erro ao atualizar a tarefa: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+    finally:
+        if 'conectar' in locals():
+            conectar.close()
+
+
 
 
 if __name__ == '__main__':
