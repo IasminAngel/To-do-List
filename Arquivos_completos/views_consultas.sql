@@ -1,0 +1,30 @@
+CREATE VIEW IF NOT EXISTS tarefas_com_empresa AS
+SELECT 
+    t.id AS id_tarefa,
+    t.descricao,
+    t.nome_setor,
+    t.prioridade,
+    t.data_cadastro,
+    t.status,
+    e.idUsuario AS id_empresa,
+    e.nome AS nome_empresa,
+    e.email AS email_empresa
+FROM tarefas t
+JOIN empresa e ON t.empresa_idUsuario = e.idUsuario;
+
+SELECT 
+    descricao,
+    nome_setor,
+    prioridade,
+    data_cadastro,
+    status
+FROM tarefas
+WHERE nome_setor = 'Financeiro' AND prioridade = 'Alta';
+
+SELECT 
+    e.nome AS nome_empresa,
+    COUNT(t.id) AS total_tarefas
+FROM empresa e
+LEFT JOIN tarefas t ON t.empresa_idUsuario = e.idUsuario
+GROUP BY e.idUsuario
+ORDER BY total_tarefas DESC;
